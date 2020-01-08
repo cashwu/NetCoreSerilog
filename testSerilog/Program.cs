@@ -5,30 +5,44 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Enrichers;
+using Serilog.Events;
 
 namespace testSerilog
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            var configuration = new ConfigurationBuilder()
-                                .SetBasePath(Directory.GetCurrentDirectory())
-                                .AddJsonFile("appsettings.json", false, true)
-                                .Build();
-
+            // var configuration = new ConfigurationBuilder()
+            //                     .SetBasePath(Directory.GetCurrentDirectory())
+            //                     .AddJsonFile("appsettings.json", false, true)
+            //                     .Build();
+            //
+            // Log.Logger = new LoggerConfiguration()
+            //              .ReadFrom.Configuration(configuration)
+            //              .CreateLogger();
+            
             Log.Logger = new LoggerConfiguration()
-                         .ReadFrom.Configuration(configuration)
-                         .CreateLogger();
+                         .MinimumLevel.Debug()
+                         .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning) 
+                         .Enrich.FromLogContext()
+                         .WriteTo.Console()
+                         .WriteTo.Seq("http://localhost:5341")
+                         .CreateLogger(); 
 
             try
             {
                 Log.Information("Starting web host");
                 CreateHostBuilder(args).Build().Run();
+
+                return 0;
             }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Host terminated unexpectedly");
+
+                return 1;
             }
             finally
             {
@@ -38,13 +52,7 @@ namespace testSerilog
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog((context, configuration) =>
-                {
-                    configuration.ReadFrom.Configuration(context.Configuration)
-                                 .Enrich.FromLogContext()
-                                 .Enrich.With(new ThreadIdEnricher())
-                                 .Enrich.With(new MachineNameEnricher());
-                })
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

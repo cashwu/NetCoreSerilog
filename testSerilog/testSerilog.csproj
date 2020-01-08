@@ -6,15 +6,17 @@
 
     <ItemGroup>
       <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
-      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.1.3" />
-      <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
-      <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="4.0.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Serilogs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Serilogs\log-20191228_001.txt" />
     </ItemGroup>
 
 

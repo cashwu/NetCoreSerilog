@@ -14,10 +14,12 @@ namespace testSerilog.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IDiagnosticContext _diagnosticContext;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IDiagnosticContext diagnosticContext)
         {
             _logger = logger;
+            _diagnosticContext = diagnosticContext;
         }
 
         public IActionResult Index()
@@ -25,6 +27,8 @@ namespace testSerilog.Controllers
             var logModel = new LogModel();
             var fruit = new[] { "Apple", "Pear", "Orange" };
             _logger.LogInformation("Hello, world - {fruit} - {@logModel}", fruit, logModel);
+            
+            _diagnosticContext.Set("CatalogLoadTime", 123123123123);
             
             return View();
         }

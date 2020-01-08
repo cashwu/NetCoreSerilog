@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Context;
 
@@ -19,28 +18,22 @@ namespace testSerilog
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
+            app.UseDeveloperExceptionPage();
 
             app.UseStaticFiles();
 
-            app.UseMiddleware<LogUserNameMiddleware>();
-            app.UseSerilogRequestLogging();
+            // app.UseMiddleware<LogUserNameMiddleware>();
+            app.UseSerilogRequestLogging(opts =>
+            {
+                opts.EnrichDiagnosticContext = LogHelper.EnrichFromRequest;
+            });
 
             app.UseRouting();
 
@@ -53,7 +46,7 @@ namespace testSerilog
             });
         }
     }
-    
+
     public class LogUserNameMiddleware
     {
         private readonly RequestDelegate _next;
@@ -68,6 +61,35 @@ namespace testSerilog
             LogContext.PushProperty("UserName", context.User?.Identity?.Name ?? "Not Login");
 
             return _next(context);
+        }
+    }
+    
+    public static class LogHelper 
+    {
+        public static void EnrichFromRequest(IDiagnosticContext diagnosticContext, HttpContext httpContext)
+        {
+            var request = httpContext.Request;
+
+            // Set all the common properties available for every request
+            diagnosticContext.Set("Host", request.Host);
+            diagnosticContext.Set("Protocol", request.Protocol);
+            diagnosticContext.Set("Scheme", request.Scheme);
+
+            // Only set it if available. You're not sending sensitive data in a querystring right?!
+            if(request.QueryString.HasValue)
+            {
+                diagnosticContext.Set("QueryString", request.QueryString.Value);
+            }
+
+            // Set the content-type of the Response at this point
+            diagnosticContext.Set("ContentType", httpContext.Response.ContentType);
+
+            // Retrieve the IEndpointFeature selected for the request
+            var endpoint = httpContext.GetEndpoint();
+            if (endpoint != null) // endpoint != null
+            {
+                diagnosticContext.Set("EndpointName", endpoint.DisplayName);
+            }
         }
     }
 }
