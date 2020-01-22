@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using testSerilog.Models;
 
 namespace testSerilog.Controllers
 {
@@ -22,6 +16,7 @@ namespace testSerilog.Controllers
             _diagnosticContext = diagnosticContext;
         }
 
+        [Route("/")]
         public IActionResult Index()
         {
             var logModel = new LogModel();
